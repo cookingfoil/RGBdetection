@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import time
 import pygame
 
-cap = cv2.VideoCapture("C:/Users/IMLAB/Desktop/bigdot1.mp4")
+cap = cv2.VideoCapture("C:/Users/IMLAB/Desktop/bigdot2.mp4")
 
 # Check if camera opened successfully
 if cap.isOpened() == False:
@@ -19,34 +19,75 @@ stop_frame = length-100
 fig = plt.figure()
 
 
-
 # Read until video is completed
 while (cap.isOpened()):
 
+############# RGB detection
+    # frame_number = frame_number + 1
+    # time.sleep(0.5)
+    # # Capture frame-by-frame
+    # ret, frame = cap.read()
+    # # print(frame.shape)
+    # framergb = frame[:,:,:]
+    # # lower_yellow = np.array([120,180,210])
+    # # upper_yellow = np.array([160, 215, 255])
+    #
+    # # yellow boxes
+    # # lower_yellow = np.array([100, 160, 190])
+    # # upper_yellow = np.array([180, 230, 255])
+    #
+    # # green boxes
+    # lower_yellow = np.array([149, 130, 130])
+    # upper_yellow = np.array([170, 170, 160])
+    #
+    # mask = cv2.inRange(framergb, lower_yellow, upper_yellow)
+    # res = cv2.bitwise_and(frame, frame, mask = mask)
+    #
+    # cv2.imshow('frame', frame)
+    # # cv2.imshow('mask', mask)
+    # cv2.imshow('res', res)
+    # k = cv2.waitKey(5) & 0xFF
+    # if k == 27:
+    #     break
+############# RGB detection
+
+############# HSV detection
     frame_number = frame_number + 1
-    time.sleep(0.5)
+    time.sleep(0.1)
     # Capture frame-by-frame
     ret, frame = cap.read()
     # print(frame.shape)
-    framergb = frame[:,:,:]
-    # lower_yellow = np.array([120,180,210])
-    # upper_yellow = np.array([160, 215, 255])
-    # lower_yellow = np.array([100, 160, 190])
-    # upper_yellow = np.array([180, 230, 255])
-    # green boxes
-    lower_yellow = np.array([149, 130, 130])
-    upper_yellow = np.array([170, 170, 160])
 
-    mask = cv2.inRange(framergb, lower_yellow, upper_yellow)
+    framebgr = frame[:, :, :]
+    # bgr = [140, 200, 220]
+    bgr = [160, 150, 155]
+    # bgr = [0, 128, 0]
 
-    res = cv2.bitwise_and(frame, frame, mask = mask)
+    thresh = 20
 
-    cv2.imshow('frame', frame)
-    # cv2.imshow('mask', mask)
-    cv2.imshow('res', res)
+    minBGR = np.array([bgr[0] - thresh, bgr[1] - thresh, bgr[2] - thresh])
+    maxBGR = np.array([bgr[0] + thresh, bgr[1] + thresh, bgr[2] + thresh])
+
+    maskBGR = cv2.inRange(framebgr,minBGR,maxBGR)
+    resultBGR = cv2.bitwise_and(framebgr, framebgr, mask = maskBGR)
+
+    # convert to HSV
+    brightHSV = cv2.cvtColor(framebgr, cv2.COLOR_BGR2HSV)
+    hsv = cv2.cvtColor(np.uint8([[bgr]]), cv2.COLOR_BGR2HSV)[0][0]
+
+    minHSV = np.array([hsv[0] - thresh, hsv[1] - thresh, hsv[2] - thresh])
+    maxHSV = np.array([hsv[0] + thresh, hsv[1] + thresh, hsv[2] + thresh])
+
+    maskHSV = cv2.inRange(brightHSV, minHSV, maxHSV)
+    resultHSV = cv2.bitwise_and(brightHSV, brightHSV, mask=maskHSV)
+
+    cv2.imshow('Result HSV', resultHSV)
+    # # cv2.imshow('mask', mask)
+    # cv2.imshow('res', res)
     k = cv2.waitKey(5) & 0xFF
     if k == 27:
         break
+############# HSV detection
 
 
     if ret == True:
@@ -59,6 +100,7 @@ while (cap.isOpened()):
             #             cv2.circle(frame, (i, j), 10, (0, 255, 255), thickness=10)
             print(frame_number)
             pixel = frame[:,:]
+            cv2.imshow('Frame', frame)
 
             average = pixel.mean(axis=0).mean(axis=0)
             print (average)
