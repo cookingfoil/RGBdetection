@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import time
 import pygame
 
-cap = cv2.VideoCapture("C:/Users/IMLAB/Desktop/greenline.mp4")
+cap = cv2.VideoCapture("C:/Users/IMLAB/Desktop/close.mp4")
 
 # Check if camera opened successfully
 if cap.isOpened() == False:
@@ -53,6 +53,7 @@ while (cap.isOpened()):
 
 ############# HSV detection
     frame_number = frame_number + 1
+    targetpos = [[0, 0]]
     time.sleep(0.1)
     # Capture frame-by-frame
     ret, frame = cap.read()
@@ -60,15 +61,19 @@ while (cap.isOpened()):
 
     framebgr = frame[:, :, :]
     # bgr = [140, 200, 220]
-    bgr = [130, 159, 122] # B G R
+    # bgr = [130, 159, 122] # B G R
     # bgr = [0, 128, 0]
+    # thresh = 40
 
-    b, g, r = cv2.split(frame)
-    print("frame:", frame)
-    print("g:", g)
+    # bigblob
+    bgr = [130, 171, 109]
+    thresh = 35
+
+    # b, g, r = cv2.split(frame)
+    # print("frame:", frame)
+    # print("g:", g)
     # cv2.imshow("Green", g)
 
-    thresh = 40
 
     minBGR = np.array([bgr[0] - thresh, bgr[1] - thresh, bgr[2] - thresh])
     maxBGR = np.array([bgr[0] + thresh, bgr[1] + thresh, bgr[2] + thresh])
@@ -79,22 +84,22 @@ while (cap.isOpened()):
     # convert to HSV
     brightHSV = cv2.cvtColor(framebgr, cv2.COLOR_BGR2HSV)
     hsv = cv2.cvtColor(np.uint8([[bgr]]), cv2.COLOR_BGR2HSV)[0][0]
-    print("hsv:", hsv)
-
-
+    # print("hsv:", hsv)
 
     # minHSV = np.array([hsv[0] - thresh, hsv[1] - thresh, hsv[2] - thresh])
     # maxHSV = np.array([hsv[0] + thresh, hsv[1] + thresh, hsv[2] + thresh])
 
-    huethresh = 40
-    sthresh = 65
-    minHSV = np.array([hsv[0] - huethresh, hsv[1] - sthresh, hsv[2] - sthresh])
-    maxHSV = np.array([hsv[0] + huethresh, hsv[1] + sthresh, hsv[2] + sthresh])
+    hthresh = 25
+    sthresh = 70
+
+    minHSV = np.array([hsv[0] - hthresh, hsv[1] - sthresh, hsv[2] - sthresh])
+    maxHSV = np.array([hsv[0] + hthresh, hsv[1] + sthresh, hsv[2] + sthresh])
 
 
     maskHSV = cv2.inRange(brightHSV, minHSV, maxHSV)
     resultHSV = cv2.bitwise_and(brightHSV, brightHSV, mask=maskHSV)
 
+#marking
     maskarea1 = [17, 343]
     maskarea2 = [180, 401]
     for i in range(maskarea1[0], maskarea2[0]):
@@ -108,6 +113,16 @@ while (cap.isOpened()):
             resultHSV[j, i] = 0
 
     cv2.imshow('Result HSV', resultHSV)
+    # print("resultHSV:", resultHSV)
+    participant_num = 1
+
+    if frame_number == 1:
+        f = open("C:/Users/IMLAB/Desktop/data_target/" + str(participant_num) + ".txt", 'w')
+        lenf = open("C:/Users/IMLAB/Desktop/data_target/" + str(participant_num) + "_length.txt", 'w')
+        f.close()
+
+
+
 
 ###################### Blob detection
 # Read image
@@ -116,33 +131,34 @@ while (cap.isOpened()):
     im = v1
 
 
+
 ###################### line detection
-    # Read image
-    # img = cv2.imread('C:/Users/IMLAB/Desktop/rect_test.jpg', cv2.IMREAD_COLOR) # road.png is the filename
-    # # # Convert the image to gray-scale
-    # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    # print("gray:", gray)
-    # print("im:", im)
-    # Find the edges in the image using canny detector
-    edges = cv2.Canny(im, 50, 200)
-    # Detect points that form a line
-    max_slider = 30
-    # lines = cv2.HoughLinesP(edges, 1, np.pi/180, max_slider, minLineLength=1, maxLineGap=250)
-    # lines = cv2.HoughLines(edges, 1, np.pi/180, max_slider)
-    lines = cv2.HoughLinesP(edges, 1, np.pi/180, max_slider)
-    print(lines)
-    # cv2.imshow("lines", lines)
-    # Draw lines on the image
-
-    if lines is not None :
-        for line in lines:
-            x1, y1, x2, y2 = line[0]
-            if ((x1-x2)**2 + (y1-y2)**2)**0.5 >= 3:
-                cv2.line(frame, (x1, y1), (x2, y2), (0, 0, 255), 3)
-
-
-    # Show result
-    cv2.imshow("Result Image", frame)
+    # # Read image
+    # # img = cv2.imread('C:/Users/IMLAB/Desktop/rect_test.jpg', cv2.IMREAD_COLOR) # road.png is the filename
+    # # # # Convert the image to gray-scale
+    # # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # # print("gray:", gray)
+    # # print("im:", im)
+    # # Find the edges in the image using canny detector
+    #         edges = cv2.Canny(im, 50, 200)
+    #         # Detect points that form a line
+    #         max_slider = 30
+    #         # lines = cv2.HoughLinesP(edges, 1, np.pi/180, max_slider, minLineLength=1, maxLineGap=250)
+    #         # lines = cv2.HoughLines(edges, 1, np.pi/180, max_slider)
+    #         lines = cv2.HoughLinesP(edges, 1, np.pi/180, max_slider)
+    #         print(lines)
+    #         # cv2.imshow("lines", lines)
+    #         # Draw lines on the image
+    #
+    #         if lines is not None :
+    #             for line in lines:
+    #                 x1, y1, x2, y2 = line[0]
+    #                 if ((x1-x2)**2 + (y1-y2)**2)**0.5 >= 3:
+    #                     cv2.line(frame, (x1, y1), (x2, y2), (0, 0, 255), 3)
+    #
+    #
+    #         # Show result
+    #         cv2.imshow("Result Image", frame)
 ###################### line detection
 
 ##########Setup SimpleBlobDetector parameters.
@@ -192,8 +208,33 @@ while (cap.isOpened()):
 
     # Show keypoints
     cv2.imshow("Keypoints", im_with_keypoints)
+    #print(im_with_keypoints)
     cv2.imshow('Frame', frame)
-    cv2.waitKey(0)
+    # cv2.waitKey(0)
+
+    # targetpos = [[0,0]]
+    # targetpos = np.zeros((3,1), dtype=np.uint8)
+    for i in range(1080):
+        for j in range(1920):
+            # if frame_number == 1:
+            #     targetpos = [[0,0]]
+            if im_with_keypoints[i,j][0] != 0 and im_with_keypoints[i,j][1] != 0 and im_with_keypoints[i,j][2] != 0 :
+                newrow = [j,i] ### (y,x)
+                targetpos = np.vstack([targetpos, newrow])
+                lentargetpos = len(targetpos)
+                # np.append(targetpos, newrow, axis=0)
+                #print("pixel:", [j,i])
+    # print("targetpos:", targetpos)
+    f = open("C:/Users/IMLAB/Desktop/data_target/" + str(participant_num) + ".txt", 'a')
+    lenf = open("C:/Users/IMLAB/Desktop/data_target/" + str(participant_num) + "_length.txt", 'a')
+    f.write(str(targetpos))
+    lenf.write(str(lentargetpos)+",")
+    print(lentargetpos)
+    print(targetpos)
+    # lenf.write(str(length(targetpos)))
+
+    f.close
+    lenf.close
 
 ###################### Blob detection
 
@@ -218,7 +259,7 @@ while (cap.isOpened()):
             # cv2.imshow('Frame', frame)
 
             average = pixel.mean(axis=0).mean(axis=0)
-            print (average)
+            # print (average)
             img = img + average
             # img = cv2.imread('frame', cv2.IMREAD_COLOR)[200,200,[2,1,0]]
             # print(img)
@@ -228,7 +269,7 @@ while (cap.isOpened()):
         elif frame_number >= stop_frame:
             # Display the resulting frame
             overallavg = img / length
-            print(overallavg)
+            # print(overallavg)
             cv2.imshow('Frame', frame)
             # image_filtering(frame)
 
