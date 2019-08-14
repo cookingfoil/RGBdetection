@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import time
 import pygame
 
-cap = cv2.VideoCapture("C:/Users/IMLAB/Desktop/bigdot1.mp4")
+cap = cv2.VideoCapture("C:/Users/IMLAB/Desktop/greenline.mp4")
 
 # Check if camera opened successfully
 if cap.isOpened() == False:
@@ -60,10 +60,15 @@ while (cap.isOpened()):
 
     framebgr = frame[:, :, :]
     # bgr = [140, 200, 220]
-    bgr = [163, 167, 153] # B G R
+    bgr = [130, 159, 122] # B G R
     # bgr = [0, 128, 0]
 
-    thresh = 30
+    b, g, r = cv2.split(frame)
+    print("frame:", frame)
+    print("g:", g)
+    # cv2.imshow("Green", g)
+
+    thresh = 40
 
     minBGR = np.array([bgr[0] - thresh, bgr[1] - thresh, bgr[2] - thresh])
     maxBGR = np.array([bgr[0] + thresh, bgr[1] + thresh, bgr[2] + thresh])
@@ -74,9 +79,18 @@ while (cap.isOpened()):
     # convert to HSV
     brightHSV = cv2.cvtColor(framebgr, cv2.COLOR_BGR2HSV)
     hsv = cv2.cvtColor(np.uint8([[bgr]]), cv2.COLOR_BGR2HSV)[0][0]
+    print("hsv:", hsv)
 
-    minHSV = np.array([hsv[0] - thresh, hsv[1] - thresh, hsv[2] - thresh])
-    maxHSV = np.array([hsv[0] + thresh, hsv[1] + thresh, hsv[2] + thresh])
+
+
+    # minHSV = np.array([hsv[0] - thresh, hsv[1] - thresh, hsv[2] - thresh])
+    # maxHSV = np.array([hsv[0] + thresh, hsv[1] + thresh, hsv[2] + thresh])
+
+    huethresh = 40
+    sthresh = 65
+    minHSV = np.array([hsv[0] - huethresh, hsv[1] - sthresh, hsv[2] - sthresh])
+    maxHSV = np.array([hsv[0] + huethresh, hsv[1] + sthresh, hsv[2] + sthresh])
+
 
     maskHSV = cv2.inRange(brightHSV, minHSV, maxHSV)
     resultHSV = cv2.bitwise_and(brightHSV, brightHSV, mask=maskHSV)
@@ -85,13 +99,13 @@ while (cap.isOpened()):
     maskarea2 = [180, 401]
     for i in range(maskarea1[0], maskarea2[0]):
         for j in range(maskarea1[1], maskarea2[1]):
-            resultHSV[j, i] = 100
+            resultHSV[j, i] = 0
 
     maskarea1 = [803, 1]
     maskarea2 = [1115, 59]
     for i in range(maskarea1[0], maskarea2[0]):
         for j in range(maskarea1[1], maskarea2[1]):
-            resultHSV[j, i] = 100
+            resultHSV[j, i] = 0
 
     cv2.imshow('Result HSV', resultHSV)
 
@@ -100,6 +114,36 @@ while (cap.isOpened()):
 #     im = cv2.imread(resultHSV, cv2.IMREAD_GRAYSCALE)
     h, s, v1 = cv2.split(resultHSV)
     im = v1
+
+
+###################### line detection
+    # Read image
+    # img = cv2.imread('C:/Users/IMLAB/Desktop/rect_test.jpg', cv2.IMREAD_COLOR) # road.png is the filename
+    # # # Convert the image to gray-scale
+    # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # print("gray:", gray)
+    # print("im:", im)
+    # Find the edges in the image using canny detector
+    edges = cv2.Canny(im, 50, 200)
+    # Detect points that form a line
+    max_slider = 30
+    # lines = cv2.HoughLinesP(edges, 1, np.pi/180, max_slider, minLineLength=1, maxLineGap=250)
+    # lines = cv2.HoughLines(edges, 1, np.pi/180, max_slider)
+    lines = cv2.HoughLinesP(edges, 1, np.pi/180, max_slider)
+    print(lines)
+    # cv2.imshow("lines", lines)
+    # Draw lines on the image
+
+    if lines is not None :
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+            if ((x1-x2)**2 + (y1-y2)**2)**0.5 >= 3:
+                cv2.line(frame, (x1, y1), (x2, y2), (0, 0, 255), 3)
+
+
+    # Show result
+    cv2.imshow("Result Image", frame)
+###################### line detection
 
 ##########Setup SimpleBlobDetector parameters.
     params = cv2.SimpleBlobDetector_Params()
@@ -171,7 +215,7 @@ while (cap.isOpened()):
             #             cv2.circle(frame, (i, j), 10, (0, 255, 255), thickness=10)
             print(frame_number)
             pixel = frame[:,:]
-            cv2.imshow('Frame', frame)
+            # cv2.imshow('Frame', frame)
 
             average = pixel.mean(axis=0).mean(axis=0)
             print (average)
