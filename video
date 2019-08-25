@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import time
 import pygame
 
-cap = cv2.VideoCapture("C:/Users/IMLAB/Desktop/greenline.mp4")
+cap = cv2.VideoCapture("C:/Users/IMLAB/Desktop/DetectionTestVideo/thicker.mp4")
 
 # Check if camera opened successfully
 if cap.isOpened() == False:
@@ -60,12 +60,12 @@ while (cap.isOpened()):
 
     framebgr = frame[:, :, :]
     # bgr = [140, 200, 220]
-    bgr = [130, 159, 122] # B G R
+    bgr = [31, 203, 17] # B G R
     # bgr = [0, 128, 0]
 
     b, g, r = cv2.split(frame)
-    print("frame:", frame)
-    print("g:", g)
+    # print("frame:", frame)
+    # print("g:", g)
     # cv2.imshow("Green", g)
 
     thresh = 40
@@ -79,7 +79,7 @@ while (cap.isOpened()):
     # convert to HSV
     brightHSV = cv2.cvtColor(framebgr, cv2.COLOR_BGR2HSV)
     hsv = cv2.cvtColor(np.uint8([[bgr]]), cv2.COLOR_BGR2HSV)[0][0]
-    print("hsv:", hsv)
+    # print("hsv:", hsv)
 
 
 
@@ -87,7 +87,7 @@ while (cap.isOpened()):
     # maxHSV = np.array([hsv[0] + thresh, hsv[1] + thresh, hsv[2] + thresh])
 
     huethresh = 40
-    sthresh = 65
+    sthresh = 80
     minHSV = np.array([hsv[0] - huethresh, hsv[1] - sthresh, hsv[2] - sthresh])
     maxHSV = np.array([hsv[0] + huethresh, hsv[1] + sthresh, hsv[2] + sthresh])
 
@@ -103,6 +103,12 @@ while (cap.isOpened()):
 
     maskarea1 = [803, 1]
     maskarea2 = [1115, 59]
+    for i in range(maskarea1[0], maskarea2[0]):
+        for j in range(maskarea1[1], maskarea2[1]):
+            resultHSV[j, i] = 0
+
+    maskarea1 = [124, 180]
+    maskarea2 = [170, 230]
     for i in range(maskarea1[0], maskarea2[0]):
         for j in range(maskarea1[1], maskarea2[1]):
             resultHSV[j, i] = 0
@@ -126,19 +132,38 @@ while (cap.isOpened()):
     # Find the edges in the image using canny detector
     edges = cv2.Canny(im, 50, 200)
     # Detect points that form a line
-    max_slider = 30
+    max_slider = 10
     # lines = cv2.HoughLinesP(edges, 1, np.pi/180, max_slider, minLineLength=1, maxLineGap=250)
     # lines = cv2.HoughLines(edges, 1, np.pi/180, max_slider)
     lines = cv2.HoughLinesP(edges, 1, np.pi/180, max_slider)
-    print(lines)
+    print("lines: ", lines)
+    print("line x1: ", min(lines[:,0,0]))
+    print("line x1: ", max(lines[:,0,0]))
+    print("line x2: ", lines[:,0,2])
+    print("line y1: ", lines[:,0,1])
     # cv2.imshow("lines", lines)
     # Draw lines on the image
+
+    minx1 = min(lines[:,0,0])
+    maxx1 = max(lines[:,0,0])
+    minx2 = min(lines[:,0,2])
+    maxx2 = max(lines[:,0,2])
+    miny1 = min(lines[:,0,1])
+    maxy1 = max(lines[:,0,1])
+    miny2 = min(lines[:,0,3])
+    maxy2 = max(lines[:,0,3])
 
     if lines is not None :
         for line in lines:
             x1, y1, x2, y2 = line[0]
             if ((x1-x2)**2 + (y1-y2)**2)**0.5 >= 3:
                 cv2.line(frame, (x1, y1), (x2, y2), (0, 0, 255), 3)
+            # position = open("C:/Users/IMLAB/Desktop/DetectionTestVideo/TargetPosition.txt", 'w')
+            # position.write(np.array2string(lines))
+            # position.close()
+            # position = open("C:/Users/IMLAB/Desktop/DetectionTestVideo/TargetPosition.txt", 'w')
+            # np.savetxt("TargetPosition.csv", line, delimiter=",")
+
 
 
     # Show result
@@ -215,10 +240,9 @@ while (cap.isOpened()):
             #             cv2.circle(frame, (i, j), 10, (0, 255, 255), thickness=10)
             print(frame_number)
             pixel = frame[:,:]
-            # cv2.imshow('Frame', frame)
 
             average = pixel.mean(axis=0).mean(axis=0)
-            print (average)
+            # print (average)
             img = img + average
             # img = cv2.imread('frame', cv2.IMREAD_COLOR)[200,200,[2,1,0]]
             # print(img)
@@ -228,7 +252,7 @@ while (cap.isOpened()):
         elif frame_number >= stop_frame:
             # Display the resulting frame
             overallavg = img / length
-            print(overallavg)
+            # print(overallavg)
             cv2.imshow('Frame', frame)
             # image_filtering(frame)
 
