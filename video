@@ -22,7 +22,7 @@ fig = plt.figure()
 # Read until video is completed
 while (cap.isOpened()):
 
-############# RGB detection
+############# RGB detections
     # frame_number = frame_number + 1
     # time.sleep(0.5)
     # # Capture frame-by-frame
