@@ -4,20 +4,24 @@ import matplotlib.pyplot as plt
 import time
 import pygame
 
-cap = cv2.VideoCapture("C:/Users/IMLAB/Desktop/DetectionTestVideo/thicker.mp4")
+# cap = cv2.VideoCapture("C:/Users/IMLAB/Desktop/DetectionTestVideo/thicker.mp4")
+cap = cv2.VideoCapture("C:/Users/IMLAB/Dropbox/Eunji Park/0_Research/CHI2020/Exp_data/CSGO_Video/imlab_2_game_Counter-strike  Global Offensive 2019.08.21 - 17.38.26.04.mp4")
+par_num = 2
 
 # Check if camera opened successfully
 if cap.isOpened() == False:
     print("Error opening video stream or file")
 
 length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+print(length)
 img = np.zeros([1,3], dtype=np.uint8)
+minx1array = np.zeros(shape=(length+100, 8))
+# minx1array[0] = ["minx1", "maxx1", "minx2", "maxx2", "miny1", "maxy1", "miny2", "maxy2"]
 #print(img)
 
 frame_number = 0
-stop_frame = length-100
+stop_frame = length
 fig = plt.figure()
-
 
 # Read until video is completed
 while (cap.isOpened()):
@@ -57,6 +61,9 @@ while (cap.isOpened()):
     # Capture frame-by-frame
     ret, frame = cap.read()
     # print(frame.shape)
+    if frame_number >= stop_frame:
+        break
+
 
     framebgr = frame[:, :, :]
     # bgr = [140, 200, 220]
@@ -113,6 +120,18 @@ while (cap.isOpened()):
         for j in range(maskarea1[1], maskarea2[1]):
             resultHSV[j, i] = 0
 
+    maskarea1 = [20, 80]
+    maskarea2 = [280, 330]
+    for i in range(maskarea1[0], maskarea2[0]):
+        for j in range(maskarea1[1], maskarea2[1]):
+            resultHSV[j, i] = 0
+
+    maskarea1 = [25, 850]
+    maskarea2 = [100, 970]
+    for i in range(maskarea1[0], maskarea2[0]):
+        for j in range(maskarea1[1], maskarea2[1]):
+            resultHSV[j, i] = 0
+
     cv2.imshow('Result HSV', resultHSV)
 
 ###################### Blob detection
@@ -136,35 +155,68 @@ while (cap.isOpened()):
     # lines = cv2.HoughLinesP(edges, 1, np.pi/180, max_slider, minLineLength=1, maxLineGap=250)
     # lines = cv2.HoughLines(edges, 1, np.pi/180, max_slider)
     lines = cv2.HoughLinesP(edges, 1, np.pi/180, max_slider)
-    print("lines: ", lines)
-    print("line x1: ", min(lines[:,0,0]))
-    print("line x1: ", max(lines[:,0,0]))
-    print("line x2: ", lines[:,0,2])
-    print("line y1: ", lines[:,0,1])
+
+
+    # to find a target position
+    # print("lines: ", lines)
+    # print("line x1: ", min(lines[:,0,0]))
+    # print("line x1: ", max(lines[:,0,0]))
+    # print("line x2: ", lines[:,0,2])
+    # print("line y1: ", lines[:,0,1])
+
     # cv2.imshow("lines", lines)
     # Draw lines on the image
 
-    minx1 = min(lines[:,0,0])
-    maxx1 = max(lines[:,0,0])
-    minx2 = min(lines[:,0,2])
-    maxx2 = max(lines[:,0,2])
-    miny1 = min(lines[:,0,1])
-    maxy1 = max(lines[:,0,1])
-    miny2 = min(lines[:,0,3])
-    maxy2 = max(lines[:,0,3])
 
     if lines is not None :
         for line in lines:
             x1, y1, x2, y2 = line[0]
             if ((x1-x2)**2 + (y1-y2)**2)**0.5 >= 3:
                 cv2.line(frame, (x1, y1), (x2, y2), (0, 0, 255), 3)
-            # position = open("C:/Users/IMLAB/Desktop/DetectionTestVideo/TargetPosition.txt", 'w')
-            # position.write(np.array2string(lines))
-            # position.close()
+                minx1 = min(lines[:, 0, 0])
+                maxx1 = max(lines[:, 0, 0])
+                minx2 = min(lines[:, 0, 2])
+                maxx2 = max(lines[:, 0, 2])
+                miny1 = min(lines[:, 0, 1])
+                maxy1 = max(lines[:, 0, 1])
+                miny2 = min(lines[:, 0, 3])
+                maxy2 = max(lines[:, 0, 3])
+
+                minx1array[frame_number, 0] = minx1
+                minx1array[frame_number, 1] = maxx1
+                minx1array[frame_number, 2] = minx2
+                minx1array[frame_number, 3] = maxx2
+                minx1array[frame_number, 4] = miny1
+                minx1array[frame_number, 5] = maxy1
+                minx1array[frame_number, 6] = miny2
+                minx1array[frame_number, 7] = maxy2
+
+
+                # position = open("C:/Users/IMLAB/Desktop/DetectionTestVideo/TargetPosition.txt", 'w')
+                # np.savetxt(position, minx1, maxx1, delimiter=",")
+                # position.close()
+
+            #
             # position = open("C:/Users/IMLAB/Desktop/DetectionTestVideo/TargetPosition.txt", 'w')
             # np.savetxt("TargetPosition.csv", line, delimiter=",")
+    # print(minx1)
 
 
+    #
+    # print(minx1array)
+    # minx1list = []
+    # minx1list = minx1list.append(minx1)
+
+    #
+    #
+    # print(minx1)
+    # print(maxx1)
+    # print(minx1list)
+    #
+    # position = open("C:/Users/IMLAB/Desktop/DetectionTestVideo/TargetPosition.txt", 'w')
+    # ",".join(minx1list)
+    # position.write(minx1list)
+    # position.close()
 
     # Show result
     cv2.imshow("Result Image", frame)
@@ -202,6 +254,8 @@ while (cap.isOpened()):
 
     k = cv2.waitKey(5) & 0xFF
     if k == 27:
+        # print(minx1array)
+        np.savetxt("result.csv", minx1array, delimiter=" ")
         break
 
     # Set up the detector with default parameters.
@@ -216,9 +270,9 @@ while (cap.isOpened()):
                                           cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
     # Show keypoints
-    cv2.imshow("Keypoints", im_with_keypoints)
-    cv2.imshow('Frame', frame)
-    cv2.waitKey(0)
+    # cv2.imshow("Keypoints", im_with_keypoints)
+    # cv2.imshow('Frame', frame)
+    # cv2.waitKey(0)
 
 ###################### Blob detection
 
@@ -253,7 +307,7 @@ while (cap.isOpened()):
             # Display the resulting frame
             overallavg = img / length
             # print(overallavg)
-            cv2.imshow('Frame', frame)
+            # cv2.imshow('Frame', frame)
             # image_filtering(frame)
 
             # Press Q on keyboard to  exit
@@ -267,6 +321,8 @@ while (cap.isOpened()):
 
 # When everything done, release the video capture object
 cap.release()
+print(minx1array)
+np.savetxt("TargetPosition_%d.csv" % par_num, minx1array, fmt="%d", delimiter=",")
 
 ##########################################################################
 # import numpy as np
